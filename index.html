@@ -533,6 +533,8 @@ async function syncAll() {
       await fetch(url, {
         method: 'POST',
         mode: 'no-cors',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           pid: entry.pid || '',
           datum: entry.datetime.slice(0,10),
