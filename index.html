@@ -530,8 +530,9 @@ async function syncAll() {
     try {
       const cd = COLORS.find(c => c.id === entry.farbe);
       const bi = entry.bristol ? BRISTOL.find(b => b.num === entry.bristol) : null;
-      const res = await fetch(url, {
+      await fetch(url, {
         method: 'POST',
+        mode: 'no-cors',
         body: JSON.stringify({
           pid: entry.pid || '',
           datum: entry.datetime.slice(0,10),
@@ -543,7 +544,7 @@ async function syncAll() {
           notizen: entry.notizen
         })
       });
-      if (res.ok) { entry.synced = true; ok++; }
+      entry.synced = true; ok++;
     } catch(e) {}
   }
   localStorage.setItem('entries', JSON.stringify(entries));
