@@ -123,8 +123,8 @@
       color-scheme: dark;
     }
 
-    /* Bristol */
-    .bristol-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    /* Konsistenz */
+    .bristol-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .bristol-btn {
       background: var(--surface2); border: 2px solid var(--border);
       border-radius: 10px; color: var(--text-muted);
@@ -132,9 +132,9 @@
       display: flex; flex-direction: column; align-items: center; gap: 2px;
       transition: all .15s;
     }
-    .bristol-btn .num { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1; }
-    .bristol-btn .shape { font-size: 16px; line-height: 1; }
-    .bristol-btn .label { font-size: 7px; text-align: center; line-height: 1.2; }
+    .bristol-btn .num { font-size: 13px; font-weight: 600; color: var(--text-muted); line-height: 1; }
+    .bristol-btn .shape { font-size: 22px; line-height: 1; }
+    .bristol-btn .label { font-size: 11px; font-weight: 500; text-align: center; line-height: 1.2; color: var(--text); }
     .bristol-btn.selected { border-color: var(--accent); background: rgba(124,158,245,0.15); }
     .bristol-btn.selected .num { color: var(--accent); }
 
@@ -149,7 +149,19 @@
     .color-chip.selected { border-color: white; transform: scale(1.2); }
     .color-label { font-size: 9px; color: var(--text-muted); }
 
-    /* Pain */
+    /* Blood toggle */
+    .toggle-row { display: flex; gap: 10px; }
+    .toggle-btn {
+      flex: 1; background: var(--surface2); border: 2px solid var(--border);
+      border-radius: 12px; color: var(--text-muted);
+      padding: 14px 8px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 500; transition: all .15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .toggle-btn.selected-no  { border-color: var(--accent2); background: rgba(168,237,190,0.12); color: var(--accent2); }
+    .toggle-btn.selected-yes { border-color: var(--danger);  background: rgba(242,139,130,0.12); color: var(--danger); }
+
+
     .pain-row { display: flex; align-items: center; gap: 12px; }
     .pain-row input[type=range] {
       flex: 1; -webkit-appearance: none; height: 6px;
@@ -261,7 +273,7 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Bristol-Skala</div>
+        <div class="card-title">Konsistenz</div>
         <div class="bristol-grid" id="bristolGrid"></div>
       </div>
 
@@ -271,7 +283,14 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Schmerzen &amp; Beschwerden &nbsp;<span style="font-weight:300;text-transform:none;letter-spacing:0">(0 = keine)</span></div>
+        <div class="card-title">Blut</div>
+        <div class="toggle-row">
+          <button class="toggle-btn" id="bloodNo"  onclick="setBlood(false)">✓ &nbsp;Kein Blut</button>
+          <button class="toggle-btn" id="bloodYes" onclick="setBlood(true)">🩸 &nbsp;Blut</button>
+        </div>
+      </div>
+
+      <div class="card"> &amp; Beschwerden &nbsp;<span style="font-weight:300;text-transform:none;letter-spacing:0">(0 = keine)</span></div>
         <div class="pain-row">
           <input type="range" id="painSlider" min="0" max="10" value="0"
             oninput="document.getElementById('painVal').textContent=this.value" />
@@ -329,13 +348,10 @@
 
 <script>
 const BRISTOL = [
-  {num:1,shape:'🟤',label:'Hart'},
-  {num:2,shape:'🟫',label:'Klumpig'},
-  {num:3,shape:'🌰',label:'Rissig'},
-  {num:4,shape:'🐛',label:'Glatt'},
-  {num:5,shape:'🫘',label:'Weich'},
-  {num:6,shape:'💧',label:'Breiig'},
-  {num:7,shape:'🌊',label:'Flüssig'},
+  {num:1, shape:'🪨', label:'Hart'},
+  {num:2, shape:'🌰', label:'Geformt'},
+  {num:3, shape:'💧', label:'Breiig'},
+  {num:4, shape:'🌊', label:'Flüssig'},
 ];
 const COLORS = [
   {id:'braun',    hex:'#7B4D2A', label:'Braun'},
@@ -349,6 +365,19 @@ const COLORS = [
 
 let selectedBristol = null;
 let selectedColor = null;
+let selectedBlood = null;
+
+function getNextId() {
+  const n = parseInt(localStorage.getItem('nextId') || '1');
+  localStorage.setItem('nextId', n + 1);
+  return n;
+}
+
+function setBlood(val) {
+  selectedBlood = val;
+  document.getElementById('bloodNo').className  = 'toggle-btn' + (val === false ? ' selected-no'  : '');
+  document.getElementById('bloodYes').className = 'toggle-btn' + (val === true  ? ' selected-yes' : '');
+}
 
 function init() {
   const now = new Date();
@@ -411,9 +440,11 @@ function saveEntry() {
 
   const entry = {
     id: Date.now(),
+    pid: getNextId(),
     datetime: `${date}T${time}`,
     bristol: selectedBristol,
     farbe: selectedColor,
+    blut: selectedBlood,
     schmerzen: parseInt(document.getElementById('painSlider').value),
     notizen: document.getElementById('notesField').value.trim(),
     synced: false
@@ -437,7 +468,9 @@ function resetForm() {
   document.getElementById('painSlider').value = 0;
   document.getElementById('painVal').textContent = '0';
   document.getElementById('notesField').value = '';
-  selectedBristol = null; selectedColor = null;
+  selectedBristol = null; selectedColor = null; selectedBlood = null;
+  document.getElementById('bloodNo').className = 'toggle-btn';
+  document.getElementById('bloodYes').className = 'toggle-btn';
 }
 
 function getEntries() {
@@ -459,15 +492,18 @@ function renderHistory() {
     const timeStr = dt.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
     const bi = e.bristol ? BRISTOL.find(b => b.num === e.bristol) : null;
     const tags = [];
-    if (bi) tags.push(`Typ ${bi.num} ${bi.shape}`);
+    if (bi) tags.push(`${bi.shape} ${bi.label}`);
     if (cd) tags.push(cd.label);
     if (e.schmerzen > 0) tags.push(`Schmerz ${e.schmerzen}/10`);
+    if (e.blut === true)  tags.push(`🩸 Blut`);
+    if (e.blut === false) tags.push(`✓ Kein Blut`);
     const syncMark = e.synced ? '☁️' : '⏳';
+    const pidStr = e.pid ? `#${e.pid} · ` : '';
     return `<div class="history-entry">
       <div class="entry-dot" style="background:${dot}"></div>
       <div class="entry-body">
-        <div class="entry-date">${dateStr} · ${timeStr} ${syncMark}</div>
-        <div class="entry-main">${bi ? `Bristol ${bi.num} – ${bi.label}` : 'Kein Typ'}</div>
+        <div class="entry-date">${pidStr}${dateStr} · ${timeStr} ${syncMark}</div>
+        <div class="entry-main">${bi ? bi.label : 'Keine Konsistenz'}</div>
         ${e.notizen ? `<div class="entry-note">${e.notizen}</div>` : ''}
         <div class="entry-tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
       </div>
@@ -497,11 +533,12 @@ async function syncAll() {
       const res = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({
+          pid: entry.pid || '',
           datum: entry.datetime.slice(0,10),
           uhrzeit: entry.datetime.slice(11,16),
-          bristol_typ: entry.bristol || '',
-          bristol_bezeichnung: bi?.label || '',
+          konsistenz: bi?.label || '',
           farbe: cd?.label || '',
+          blut: entry.blut === true ? 'Ja' : entry.blut === false ? 'Nein' : '',
           schmerzen: entry.schmerzen,
           notizen: entry.notizen
         })
