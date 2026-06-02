@@ -21,7 +21,6 @@
       --text: #f0f0f5;
       --text-muted: rgba(240,240,245,0.45);
       --danger: #f28b82;
-      --okay: #88e788;
       --radius: 16px;
     }
 
@@ -48,7 +47,7 @@
       flex-shrink: 0;
       background: rgba(15,15,26,0.95);
       border-bottom: 1px solid var(--border);
-      padding: env(safe-area-inset-top, 0px) 20px 0;
+      padding: calc(env(safe-area-inset-top, 0px) + 12px) 20px 12px;
       display: flex; align-items: center; justify-content: space-between;
       height: calc(env(safe-area-inset-top, 0px) + 56px);
     }
@@ -76,7 +75,7 @@
     }
 
     /* ── PAGES ── */
-    .page { display: none; padding: 16px 16px calc(100px + env(safe-area-inset-bottom, 0px)); }
+    .page { display: none; padding: 16px 16px calc(140px + env(safe-area-inset-bottom, 0px)); }
     .page.active { display: block; }
 
     /* ── BOTTOM TABS ── */
@@ -190,11 +189,16 @@
 
     /* Submit */
     .submit-btn {
-      width: 100%; background: linear-gradient(135deg, #7c9ef5, #5b7de8);
+      position: fixed;
+      left: 16px; right: 16px;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
+      z-index: 150;
+      background: linear-gradient(135deg, #7c9ef5, #5b7de8);
       border: none; border-radius: 14px; color: white;
       padding: 16px; font-family: 'DM Sans', sans-serif;
-      font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 4px;
+      font-size: 16px; font-weight: 600; cursor: pointer;
       transition: opacity .2s; display: block;
+      box-shadow: 0 4px 24px rgba(92,125,232,0.45);
     }
     .submit-btn:active { opacity: 0.85; }
 
@@ -308,7 +312,6 @@
         <textarea id="notesField" placeholder="Optionale Bemerkungen…" rows="3"></textarea>
       </div>
 
-      <button class="submit-btn" onclick="saveEntry()">Eintrag speichern</button>
       <div style="height:8px"></div>
     </div>
 
@@ -330,6 +333,9 @@
     </div>
 
   </div><!-- /content -->
+
+  <!-- FLOATING SAVE BUTTON (only visible on "Neu" tab) -->
+  <button class="submit-btn" id="floatingSaveBtn" onclick="saveEntry()">Eintrag speichern</button>
 
   <!-- BOTTOM TABS -->
   <div id="tabs">
@@ -434,6 +440,7 @@ function showTab(name) {
   document.getElementById('page-' + name).classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
   document.getElementById('content').scrollTop = 0;
+  document.getElementById('floatingSaveBtn').style.display = name === 'new' ? 'block' : 'none';
   if (name === 'history') renderHistory();
   if (name === 'settings') updateQueueInfo();
 }
@@ -546,7 +553,7 @@ async function syncAll() {
           uhrzeit: entry.datetime.slice(11,16),
           konsistenz: bi?.label || '',
           farbe: cd?.label || '',
-          blut: entry.blut === true ? 'Ja' : entry.blut === false ? 'Nein' : '',
+          blut: entry.blut === true ? 1 : entry.blut === false ? 0 : '',
           schmerzen: entry.schmerzen,
           notizen: entry.notizen
         })
